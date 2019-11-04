@@ -12,8 +12,10 @@ import matplotlib.pyplot as plt
 import pickle
 
 #               0          1        2           3         4        5         6          7
-# emotions = ["neutral", "anger", "contempt", "disgust", "fear", "happy", "sadness", "surprise"]
-emotions = ["neutral", "anger", "disgust", "happy", "surprise"]
+emotions = ["neutral", "anger", "contempt", "disgust", "fear", "happy", "sadness", "surprise"]
+
+#                      0          1         2         3         4
+reduced_emotions = ["neutral", "anger", "disgust", "happy", "surprise"]
 
 clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
 detector = dlib.get_frontal_face_detector()
@@ -27,9 +29,9 @@ clf_sigmoid = SVC(kernel="sigmoid", probability=True, tol=1e-3)
 data = {}
 
 
-def draw_data_graph():
+def draw_data_graph(emotions):
     y_pos = np.arange(len(emotions))
-    count = [len(glob.glob("assets\\sorted_set\\%s\\*" % emotion)) for emotion in emotions]
+    count = [len(glob.glob("assets\\sorted_set\\%s\\*.png" % emotion)) for emotion in emotions]
 
     plt.bar(y_pos, count, align='center', alpha=0.5)
     plt.xticks(y_pos, emotions)
@@ -38,10 +40,10 @@ def draw_data_graph():
     plt.show()
 
 
-draw_data_graph()
+draw_data_graph(emotions)
 
 def get_files(emotion):
-    files = glob.glob("assets\\sorted_set\\%s\\*" % emotion)
+    files = glob.glob("assets\\sorted_set\\%s\\*.png" % emotion)
     random.shuffle(files)
     print("  files count %:", len(files))
     training = files[:int(len(files) * 0.8)]
@@ -78,7 +80,7 @@ def get_landmarks(image):
     return result
 
 
-def make_set():
+def make_set(emotions):
     training_data = []
     training_labels = []
     prediction_data = []
@@ -113,51 +115,55 @@ def make_set():
     return training_data, training_labels, prediction_data, prediction_labels
 
 
-accur_lin = []
-accur_polinomial = []
-accur_rbf = []
-accur_sigmoid = []
-
 # train the models
-for i in range(0, 1): #10
-    print("Making sets %s" % i)
-    training_data, training_labels, validation_data, validation_labels = make_set()
-    npar_train = np.array(training_data)
-    npar_trainlabs = np.array(training_labels)
-    print("training SVM linear %s" % i)  # train SVM
-    clf_linear.fit(npar_train, npar_trainlabs)
-    print("training SVM polinomial %s" % i)  # train SVM
-    clf_polynomial.fit(npar_train, npar_trainlabs)
-    print("training SVM rbf %s" % i)  # train SVM
-    clf_rbf.fit(npar_train, npar_trainlabs)
-    print("training SVM sigmoid %s" % i)  # train SVM
-    clf_sigmoid.fit(npar_train, npar_trainlabs)
-    print("getting accuracies %s" % i)
-    npar_pred = np.array(validation_data)
-    pred_lin = clf_linear.score(npar_pred, validation_labels)
-    pred_polynomial = clf_polynomial.score(npar_pred, validation_labels)
-    pred_rbf = clf_rbf.score(npar_pred, validation_labels)
-    pred_sigmoid = clf_sigmoid.score(npar_pred, validation_labels)
-    print("linear: ", pred_lin)
-    print("polynomial: ", pred_polynomial)
-    print("rbf: ", pred_rbf)
-    print("sigmoid: ", pred_rbf)
-    accur_lin.append(pred_lin)
-    accur_polinomial.append(pred_polynomial)
-    accur_rbf.append(pred_rbf)
-    accur_sigmoid.append(pred_sigmoid)
+def train_model(emotions):
+    accur_lin = []
+    accur_polinomial = []
+    accur_rbf = []
+    accur_sigmoid = []
 
-mean_linear = np.mean(accur_lin)
-mean_polynomial = np.mean(accur_polinomial)
-mean_rbf = np.mean(accur_rbf)
-mean_sigmoid = np.mean(accur_sigmoid)
-print("Mean value linear svm: %s" % mean_linear)
-print("Mean value polynomial svm: %s" % mean_polynomial)
-print("Mean value rbf svm: %s" % mean_rbf)
-print("Mean value sigmoid svm: %s" % mean_sigmoid)
+    for i in range(0, 1):  # 10
+        print("Making sets %s" % i)
+        training_data, training_labels, validation_data, validation_labels = make_set(emotions)
+        npar_train = np.array(training_data)
+        npar_trainlabs = np.array(training_labels)
+        print("training SVM linear %s" % i)  # train SVM
+        clf_linear.fit(npar_train, npar_trainlabs)
+        print("training SVM polinomial %s" % i)  # train SVM
+        clf_polynomial.fit(npar_train, npar_trainlabs)
+        print("training SVM rbf %s" % i)  # train SVM
+        clf_rbf.fit(npar_train, npar_trainlabs)
+        print("training SVM sigmoid %s" % i)  # train SVM
+        clf_sigmoid.fit(npar_train, npar_trainlabs)
+        print("getting accuracies %s" % i)
+        npar_pred = np.array(validation_data)
+        pred_lin = clf_linear.score(npar_pred, validation_labels)
+        pred_polynomial = clf_polynomial.score(npar_pred, validation_labels)
+        pred_rbf = clf_rbf.score(npar_pred, validation_labels)
+        pred_sigmoid = clf_sigmoid.score(npar_pred, validation_labels)
+        print("linear: ", pred_lin)
+        print("polynomial: ", pred_polynomial)
+        print("rbf: ", pred_rbf)
+        print("sigmoid: ", pred_rbf)
+        accur_lin.append(pred_lin)
+        accur_polinomial.append(pred_polynomial)
+        accur_rbf.append(pred_rbf)
+        accur_sigmoid.append(pred_sigmoid)
+
+    mean_linear = np.mean(accur_lin)
+    mean_polynomial = np.mean(accur_polinomial)
+    mean_rbf = np.mean(accur_rbf)
+    mean_sigmoid = np.mean(accur_sigmoid)
+    print("Mean value linear svm: %s" % mean_linear)
+    print("Mean value polynomial svm: %s" % mean_polynomial)
+    print("Mean value rbf svm: %s" % mean_rbf)
+    print("Mean value sigmoid svm: %s" % mean_sigmoid)
+
+    draw_comparative_graph(mean_linear, mean_polynomial, mean_rbf, mean_sigmoid)
+    draw_confusion_matrix(emotions, validation_data, validation_labels)
 
 
-def draw_comparative_graph():
+def draw_comparative_graph(mean_linear, mean_polynomial, mean_rbf, mean_sigmoid):
     kernels = ('Linear', 'Polynomial', 'Rbf', 'Sigmoid')
     y_pos = np.arange(len(kernels))
     acc = [mean_linear, mean_polynomial, mean_rbf, mean_sigmoid]
@@ -168,22 +174,27 @@ def draw_comparative_graph():
     plt.title('SVM Kernels results')
     plt.show()
 
-def draw_confusion_matrix():
+
+def draw_confusion_matrix(emotions, validation_data, validation_labels):
     prediction_validation = clf_linear.predict(validation_data)
     conf_matrix = confusion_matrix(prediction_validation, validation_labels)
     print(conf_matrix)
     print(classification_report(prediction_validation, validation_labels))
 
-    df_cm = pd.DataFrame(conf_matrix, range(len(emotions)), range(len(emotions)))
-    # plt.figure(figsize = (15,10))
-    sn.set(font_scale=1.4)  # for label size
-    sn.heatmap(df_cm, annot = True, annot_kws=emotions)  # font size
+    cm_df = pd.DataFrame(conf_matrix, emotions, emotions)
+    plt.figure(figsize=(20, 16))
+    sn.heatmap(cm_df, annot=True)
+
+    # df_cm = pd.DataFrame(conf_matrix, range(len(emotions)), range(len(emotions)))
+    # # plt.figure(figsize = (15,10))
+    # sn.set(font_scale=1.4)  # for label size
+    # sn.heatmap(df_cm, annot = True, annot_kws=[emotions])  # font size
     plt.show()
 
-
-draw_comparative_graph()
-draw_confusion_matrix()
-
+print("Complete array of emotions")
+train_model(emotions)
+print("Reduced array of emotions")
+train_model(reduced_emotions)
 
 def prepare_images(path):
     files = glob.glob(path)
@@ -203,12 +214,12 @@ def prepare_images(path):
     return images_names, images_landmarks
 
 
-def print_result(names, results):
+def print_result(emotions, names, results):
     for name, result in zip(names, results):
         print("Emotion in {} is {}".format(name, emotions[result]))
 
 
-def print_prob_result(names, results):
+def print_prob_result(emotions, names, results):
     for name, result in zip(names, results):
         print("Image {}".format(name))
         for emotion, percentage in zip(emotions, result):
@@ -218,7 +229,7 @@ def print_prob_result(names, results):
 # test ekman images
 ekman_images, ekman_landmarks = prepare_images("assets//test//ekman//*")
 results_ekman = clf_linear.predict(ekman_landmarks)
-print_result(ekman_images, results_ekman)
+print_result(reduced_emotions, ekman_images, results_ekman)
 
 print("----------------------------------")
 
@@ -226,8 +237,8 @@ print("----------------------------------")
 test_images, test_landmarks = prepare_images("assets//test//images//*")
 results_test = clf_linear.predict(test_landmarks)
 results_prob_test = clf_linear.predict_proba(test_landmarks)
-print_result(test_images, results_test)
-print_prob_result(test_images, results_prob_test)
+print_result(reduced_emotions, test_images, results_test)
+print_prob_result(reduced_emotions, test_images, results_prob_test)
 
 
 # save the model to disk
