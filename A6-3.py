@@ -122,7 +122,7 @@ def train_model(emotions):
     accur_rbf = []
     accur_sigmoid = []
 
-    for i in range(0, 1):  # 10
+    for i in range(0, 10):  # 10
         print("Making sets %s" % i)
         training_data, training_labels, validation_data, validation_labels = make_set(emotions)
         npar_train = np.array(training_data)
@@ -182,19 +182,15 @@ def draw_confusion_matrix(emotions, validation_data, validation_labels):
     print(classification_report(prediction_validation, validation_labels))
 
     cm_df = pd.DataFrame(conf_matrix, emotions, emotions)
-    plt.figure(figsize=(20, 16))
     sn.heatmap(cm_df, annot=True)
-
-    # df_cm = pd.DataFrame(conf_matrix, range(len(emotions)), range(len(emotions)))
-    # # plt.figure(figsize = (15,10))
-    # sn.set(font_scale=1.4)  # for label size
-    # sn.heatmap(df_cm, annot = True, annot_kws=[emotions])  # font size
     plt.show()
+
 
 print("Complete array of emotions")
 train_model(emotions)
 print("Reduced array of emotions")
 train_model(reduced_emotions)
+
 
 def prepare_images(path):
     files = glob.glob(path)
