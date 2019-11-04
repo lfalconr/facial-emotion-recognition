@@ -20,7 +20,8 @@
  <p>Foi usado o dataset Cohn-Kanade, versão 2 (CK +) para treinar e validar o modelo. O banco de dados consiste em um grupo de sequências de imagens de pessoas realizando uma expressão facial correspondente a uma das emoções universais. Os dados são rotulados. O dataset pode ser solicitado aqui: http://www.consortium.ri.cmu.edu/ckagree/</p>
  
  <h3>Preparação dos Dados</h3>
- 
+ <p>Extraia o dataset e coloque todas as pastas que contêm os arquivos txt (S005, S010 etc.) em uma pasta chamada <b>"source_emotion"</b> dentro da pasta existente <b>"assets"</b>. Coloque as pastas que contêm as imagens em uma pasta chamada <b>"source_images"</b> dentro de <b>"assets"</b>.</p>
+<p>Coloque <b>shape_predictor_68_face_landmarks.dat</b> dentro da pasta <b>"assets"</b>. Pode ser baixado aqui: https://github.com/davisking/dlib-models</p>
  
  <h3>Composição do Projeto</h3>
  <p>O projeto é composto por 4 passos:</p> 
